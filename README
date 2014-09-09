@@ -1,0 +1,197 @@
+NAME
+    SQL::Schema::Versioned - Routine and convention to create/update your
+    application's DB schema
+
+VERSION
+    This document describes version 0.11 of SQL::Schema::Versioned (from
+    Perl distribution SQL-Schema-Versioned), released on 2014-09-09.
+
+DESCRIPTION
+    This module uses Log::Any for logging.
+
+    To use this module, you typically run the create_or_update_db_schema()
+    routine at the start of your program/script, e.g.:
+
+     use DBI;
+     use SQL::Schema::Versioned qw(create_or_update_db_schema);
+     my $spec = {...}; # the schema specification
+     my $dbh = DBI->connect(...);
+     my $res = create_or_update_db_schema(dbh=>$dbh, spec=>$spec);
+     die "Cannot run the application: cannot create/upgrade database schema: $res->[1]"
+         unless $res->[0] == 200;
+
+    This way, your program automatically creates/updates database schema
+    when run. Users need not know anything.
+
+FUNCTIONS
+  create_or_update_db_schema(%args) -> [status, msg, result, meta]
+    Routine and convention to create/update your application's DB schema.
+
+    With this routine (and some convention) you can easily create and update
+    database schema for your application in a simple way using pure SQL.
+
+    *Version*: version is an integer and starts from 1. Each software
+    release with schema change will bump the version number by 1. Version
+    information is stored in a special table called "meta" (SELECT value
+    FROM meta WHERE name='schema_version').
+
+    You supply the SQL statements in "spec". "spec" is a hash which at least
+    must contain the key "latest_v" (an integer) and "install" (a series of
+    SQL statements to create the schema from nothing to the latest version).
+
+    There should also be zero or more "upgrade_to_v$VERSION" keys, the value
+    of each is a series of SQL statements to upgrade from ($VERSION-1) to
+    $VERSION. So there could be "upgrade_to_v2", "upgrade_to_v3", and so on
+    up the latest version. This is used to upgrade an existing database from
+    earlier version to the latest.
+
+    For testing purposes, you can also add one or more "install_v<VERSION>"
+    key, where "XXX" is an integer, the lowest version number that you still
+    want to support. So, for example, if "latest_v" is 5 and you still want
+    to support from version 2, you can have an "install_v2" key containing a
+    series of SQL statements to create the schema at version 2, and
+    "upgrade_to_v3", "upgrade_to_v4", "upgrade_to_v5" keys. This way
+    migrations from v2 to v3, v3 to v4, and v4 to v5 can be tested.
+
+    This routine will check the existence of the "meta" table and the
+    current schema version. If "meta" table does not exist yet, the SQL
+    statements in "install" will be executed. The "meta" table will also be
+    created and a row "('schema_version', 1)" is added.
+
+    If "meta" table already exists, schema version will be read from it and
+    one or more series of SQL statements from "upgrade_to_v$VERSION" will be
+    executed to bring the schema to the latest version.
+
+    Currently only tested on MySQL, Postgres, and SQLite. Postgres is
+    recommended because it can do transactional DDL (a failed upgrade in the
+    middle will not cause the database schema state to be inconsistent, e.g.
+    in-between two versions).
+
+    Arguments ('*' denotes required arguments):
+
+    *   create_from_version => *int*
+
+        Instead of the latest, create from this version.
+
+        This can be useful during testing. By default, if given an empty
+        database, this function will use the "install" key of the spec to
+        create the schema from nothing to the latest version. However, if
+        this option is given, function wil use the corresponding
+        "install_v<VERSION>" key in the spec (which must exist) and then
+        upgrade using the "upgrade_to_v<VERSION>" keys to upgrade to the
+        latest version.
+
+    *   dbh* => *obj*
+
+        DBI database handle.
+
+    *   spec* => *hash*
+
+        SQL statements to create and update schema.
+
+        Example:
+
+         {
+             latest_v =E<gt> 3,
+ 
+             # will install version 3 (latest)
+             install =E<gt> [
+                 'CREATE TABLE IF NOT EXISTS t1 (...)',
+                 'CREATE TABLE IF NOT EXISTS t2 (...)',
+                 'CREATE TABLE t3 (...)',
+             ],
+ 
+             upgrade_to_v2 =E<gt> [
+                 'ALTER TABLE t1 ADD COLUMN c5 INT NOT NULL',
+                 'CREATE UNIQUE INDEX i1 ON t2(c1)',
+             ],
+ 
+             upgrade_to_v3 =E<gt> [
+                 'ALTER TABLE t2 DROP COLUMN c2',
+                 'CREATE TABLE t3 (...)',
+             ],
+ 
+             # provided for testing, so we can test migration from v1-E<gt>v2, v2-E<gt>v3
+             install_v1 =E<gt> [
+                 'CREATE TABLE IF NOT EXISTS t1 (...)',
+                 'CREATE TABLE IF NOT EXISTS t2 (...)',
+             ],
+         }
+
+    Return value:
+
+    Returns an enveloped result (an array).
+
+    First element (status) is an integer containing HTTP status code (200
+    means OK, 4xx caller error, 5xx function error). Second element (msg) is
+    a string containing error message, or 'OK' if status is 200. Third
+    element (result) is optional, the actual result. Fourth element (meta)
+    is called result metadata and is optional, a hash that contains extra
+    information.
+
+     (any)
+
+FAQ
+  Why use this module instead of other similar solution?
+    Mainly simplicity. I write simple application which is often
+    self-contained in a single module/script. This module works with
+    embedded SQL statements instead of having to put SQL in separate
+    files/subdirectory.
+
+  How do I see each SQL statement as it is being executed?
+    Try using Log::Any::For::DBI, e.g.:
+
+     % TRACE=1 perl -MLog::Any::For::DBI -MLog::Any::App yourapp.pl ...
+
+TODO
+    *   Configurable meta table name?
+
+    *   Reversion/downgrade?
+
+        Something which does not come up often yet in my case.
+
+SEE ALSO
+    Some other database migration tools on CPAN:
+
+    *   DBIx::Migration
+
+        Pretty much similar to this module, with support for downgrades. OO
+        style, SQL in separate files/subdirectory.
+
+    *   Database::Migrator
+
+        Pretty much similar. OO style, SQL in separate files/subdirectory.
+        Perl scripts can also be executed for each version upgrade. Meta
+        table is configurable (default recommended is 'AppliedMigrations').
+
+    *   sqitch
+
+        A more proper database change management tool with dependency
+        resolution and VCS awareness. No numbering. Command-line script and
+        Perl library provided. Looks pretty awesome and something which I
+        hope to use for more complex applications.
+
+HOMEPAGE
+    Please visit the project's homepage at
+    <https://metacpan.org/release/SQL-Schema-Versioned>.
+
+SOURCE
+    Source repository is at
+    <https://github.com/perlancar/perl-SHARYANTO-SQL-Schema>.
+
+BUGS
+    Please report any bugs or feature requests on the bugtracker website
+    <https://rt.cpan.org/Public/Dist/Display.html?Name=SQL-Schema-Versioned>
+
+    When submitting a bug or request, please include a test-file or a patch
+    to an existing test-file that illustrates the bug or desired feature.
+
+AUTHOR
+    perlancar <perlancar@cpan.org>
+
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2014 by perlancar@cpan.org.
+
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
+
