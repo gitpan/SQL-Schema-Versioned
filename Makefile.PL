@@ -21,7 +21,8 @@ my %WriteMakefileArgs = (
   "NAME" => "SQL::Schema::Versioned",
   "PREREQ_PM" => {
     "Log::Any" => 0,
-    "Rinci" => "v1.1.0"
+    "Rinci" => "v1.1.0",
+    "Scalar::Util::Numeric" => 0
   },
   "TEST_REQUIRES" => {
     "DBD::SQLite" => 0,
@@ -33,7 +34,7 @@ my %WriteMakefileArgs = (
     "IPC::Open3" => 0,
     "Test::More" => "0.98"
   },
-  "VERSION" => "0.11",
+  "VERSION" => "0.12",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -50,6 +51,7 @@ my %FallbackPrereqs = (
   "IPC::Open3" => 0,
   "Log::Any" => 0,
   "Rinci" => "v1.1.0",
+  "Scalar::Util::Numeric" => 0,
   "Test::More" => "0.98"
 );
 

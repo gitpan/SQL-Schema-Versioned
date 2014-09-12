@@ -23,12 +23,13 @@ name: SQL-Schema-Versioned
 requires:
   Log::Any: '0'
   Rinci: v1.1.0
+  Scalar::Util::Numeric: '0'
   perl: '5.010001'
 resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=SQL-Schema-Versioned
   homepage: https://metacpan.org/release/SQL-Schema-Versioned
   repository: git://github.com/perlancar/perl-SHARYANTO-SQL-Schema.git
-version: '0.11'
+version: '0.12'
 x_Dist_Zilla:
   perl:
     version: '5.018002'

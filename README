@@ -3,8 +3,8 @@ NAME
     application's DB schema
 
 VERSION
-    This document describes version 0.11 of SQL::Schema::Versioned (from
-    Perl distribution SQL-Schema-Versioned), released on 2014-09-09.
+    This document describes version 0.12 of SQL::Schema::Versioned (from
+    Perl distribution SQL-Schema-Versioned), released on 2014-09-12.
 
 DESCRIPTION
     This module uses Log::Any for logging.

@@ -1,7 +1,7 @@
 package SQL::Schema::Versioned;
 
-our $DATE = '2014-09-09'; # DATE
-our $VERSION = '0.11'; # VERSION
+our $DATE = '2014-09-12'; # DATE
+our $VERSION = '0.12'; # VERSION
 
 use 5.010001;
 use strict;
@@ -249,7 +249,7 @@ SQL::Schema::Versioned - Routine and convention to create/update your applicatio
 
 =head1 VERSION
 
-This document describes version 0.11 of SQL::Schema::Versioned (from Perl distribution SQL-Schema-Versioned), released on 2014-09-09.
+This document describes version 0.12 of SQL::Schema::Versioned (from Perl distribution SQL-Schema-Versioned), released on 2014-09-12.
 
 =head1 DESCRIPTION
 
