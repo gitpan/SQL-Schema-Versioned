@@ -1,7 +1,7 @@
 package SQL::Schema::Versioned;
 
-our $DATE = '2014-09-12'; # DATE
-our $VERSION = '0.12'; # VERSION
+our $DATE = '2015-01-03'; # DATE
+our $VERSION = '0.13'; # VERSION
 
 use 5.010001;
 use strict;
@@ -123,7 +123,7 @@ _
     "x.perinci.sub.wrapper.disable_validate_args" => 1,
 };
 sub create_or_update_db_schema {
-    my %args = @_; require Scalar::Util::Numeric;my $_sahv_dpath = []; my $arg_err; if (exists($args{'create_from_version'})) { ((defined($args{'create_from_version'})) ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required input not specified"),0)) && ((Scalar::Util::Numeric::isint($args{'create_from_version'})) ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Input is not of type integer"),0)); if ($arg_err) { return [400, "Invalid argument value for create_from_version: $arg_err"] } }if (!exists($args{'dbh'})) { return [400, "Missing argument: dbh"] } require Scalar::Util;((defined($args{'dbh'})) ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required input not specified"),0)) && ((Scalar::Util::blessed($args{'dbh'})) ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Input is not of type object"),0)); if ($arg_err) { return [400, "Invalid argument value for dbh: $arg_err"] } if (!exists($args{'spec'})) { return [400, "Missing argument: spec"] } ((defined($args{'spec'})) ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required input not specified"),0)) && ((ref($args{'spec'}) eq 'HASH') ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Input is not of type hash"),0)); if ($arg_err) { return [400, "Invalid argument value for spec: $arg_err"] } # VALIDATE_ARGS
+    my %args = @_; require Scalar::Util::Numeric;my $_sahv_dpath = []; my $arg_err; if (exists($args{'create_from_version'})) { ((defined($args{'create_from_version'})) ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required but not specified"),0)) && ((Scalar::Util::Numeric::isint($args{'create_from_version'})) ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Not of type integer"),0)); if ($arg_err) { return [400, "Invalid argument value for create_from_version: $arg_err"] } }require Scalar::Util;if (exists($args{'dbh'})) { ((defined($args{'dbh'})) ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required but not specified"),0)) && ((Scalar::Util::blessed($args{'dbh'})) ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Not of type object"),0)); if ($arg_err) { return [400, "Invalid argument value for dbh: $arg_err"] } }if (!exists($args{'dbh'})) { return [400, "Missing argument: dbh"] } if (exists($args{'spec'})) { ((defined($args{'spec'})) ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Required but not specified"),0)) && ((ref($args{'spec'}) eq 'HASH') ? 1 : (($arg_err //= (@$_sahv_dpath ? '@'.join("/",@$_sahv_dpath).": " : "") . "Not of type hash"),0)); if ($arg_err) { return [400, "Invalid argument value for spec: $arg_err"] } }if (!exists($args{'spec'})) { return [400, "Missing argument: spec"] } # VALIDATE_ARGS
 
     my $spec   = $args{spec};
     my $dbh    = $args{dbh};
@@ -249,11 +249,9 @@ SQL::Schema::Versioned - Routine and convention to create/update your applicatio
 
 =head1 VERSION
 
-This document describes version 0.12 of SQL::Schema::Versioned (from Perl distribution SQL-Schema-Versioned), released on 2014-09-12.
+This document describes version 0.13 of SQL::Schema::Versioned (from Perl distribution SQL-Schema-Versioned), released on 2015-01-03.
 
 =head1 DESCRIPTION
-
-This module uses L<Log::Any> for logging.
 
 To use this module, you typically run the create_or_update_db_schema() routine
 at the start of your program/script, e.g.:
@@ -341,35 +339,33 @@ SQL statements to create and update schema.
 Example:
 
  {
-     latest_v =E<gt> 3,
+     latest_v => 3,
  
      # will install version 3 (latest)
-     install =E<gt> [
+     install => [
          'CREATE TABLE IF NOT EXISTS t1 (...)',
          'CREATE TABLE IF NOT EXISTS t2 (...)',
          'CREATE TABLE t3 (...)',
      ],
  
-     upgrade_to_v2 =E<gt> [
+     upgrade_to_v2 => [
          'ALTER TABLE t1 ADD COLUMN c5 INT NOT NULL',
          'CREATE UNIQUE INDEX i1 ON t2(c1)',
      ],
  
-     upgrade_to_v3 =E<gt> [
+     upgrade_to_v3 => [
          'ALTER TABLE t2 DROP COLUMN c2',
          'CREATE TABLE t3 (...)',
      ],
  
-     # provided for testing, so we can test migration from v1-E<gt>v2, v2-E<gt>v3
-     install_v1 =E<gt> [
+     # provided for testing, so we can test migration from v1->v2, v2->v3
+     install_v1 => [
          'CREATE TABLE IF NOT EXISTS t1 (...)',
          'CREATE TABLE IF NOT EXISTS t2 (...)',
      ],
  }
 
 =back
-
-Return value:
 
 Returns an enveloped result (an array).
 
@@ -380,8 +376,7 @@ First element (status) is an integer containing HTTP status code
 element (meta) is called result metadata and is optional, a hash
 that contains extra information.
 
- (any)
-
+Return value:  (any)
 =head1 FAQ
 
 =head2 Why use this module instead of other similar solution?
@@ -395,18 +390,6 @@ having to put SQL in separate files/subdirectory.
 Try using L<Log::Any::For::DBI>, e.g.:
 
  % TRACE=1 perl -MLog::Any::For::DBI -MLog::Any::App yourapp.pl ...
-
-=head1 TODO
-
-=over
-
-=item * Configurable meta table name?
-
-=item * Reversion/downgrade?
-
-Something which does not come up often yet in my case.
-
-=back
 
 =head1 SEE ALSO
 
@@ -455,7 +438,7 @@ perlancar <perlancar@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by perlancar@cpan.org.
+This software is copyright (c) 2015 by perlancar@cpan.org.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
